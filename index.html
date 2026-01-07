@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algebra-Balansen</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            text-align: center;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 { color: #2c3e50; }
+
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        /* Vekt-visualisering */
+        .scale-container {
+            height: 250px;
+            position: relative;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .balance-beam {
+            width: 80%;
+            height: 10px;
+            background-color: #555;
+            position: relative;
+            transition: transform 0.5s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 5px;
+        }
+
+        .stand {
+            width: 20px;
+            height: 100px;
+            background-color: #333;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 0;
+        }
+
+        .pan {
+            width: 150px;
+            border-bottom: 5px solid #555;
+            border-left: 2px solid #555;
+            border-right: 2px solid #555;
+            height: 120px; /* Plass til blokkene */
+            display: flex;
+            flex-wrap: wrap-reverse; /* Bygger nedenfra og opp */
+            align-content: flex-start;
+            justify-content: center;
+            gap: 5px;
+            padding: 5px;
+            background-color: rgba(0,0,0,0.05);
+            position: relative;
+            top: -5px; /* Juster for å henge på bjelken */
+        }
+
+        /* Elementer oppi skålene */
+        .box-x {
+            width: 40px;
+            height: 40px;
+            background-color: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 4px;
+            box-shadow: 0 3px 0 #2980b9;
+        }
+
+        .circle-1 {
+            width: 30px;
+            height: 30px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            box-shadow: 0 3px 0 #c0392b;
+        }
+
+        /* Kontrollpanel */
+        .controls {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+        }
+
+        .action-group {
+            margin: 10px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #27ae60;
+            color: white;
+            transition: background 0.2s;
+        }
+
+        button:hover { background-color: #219150; }
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        
+        .side-btn {
+            background-color: #f39c12;
+        }
+        .side-btn:hover { background-color: #d35400; }
+
+        .equation-display {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .message {
+            height: 30px;
+            color: #d35400;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .success-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            z-index: 100;
+        }
+        
+        .success-overlay h2 { color: #2ecc71; font-size: 50px; margin: 0; }
+        .next-btn { margin-top: 20px; font-size: 20px; padding: 15px 30px; }
+
+    </style>
+</head>
+<body>
+
+    <h1>Algebra-Balansen</h1>
+    <p>Målet er å få <b>x</b> alene på venstre side. Husk: Vekten må alltid være i balanse!</p>
+
+    <div class="game-container">
+        <div class="equation-display" id="equationDisplay">Laster...</div>
+        
+        <div class="scale-container">
+            <div class="stand"></div>
+            <div class="balance-beam" id="beam">
+                <div class="pan" id="leftPan">
+                    <!-- Elementer settes inn her med JS -->
+                </div>
+                <div class="pan" id="rightPan">
+                    <!-- Elementer settes inn her med JS -->
+                </div>
+            </div>
+        </div>
+
+        <div class="message" id="messageBox"></div>
+
+        <div class="controls">
+            <h3>Hva vil du gjøre?</h3>
+            
+            <div class="action-group">
+                <span>1-ere: </span>
+                <button class="side-btn" onclick="modifyUnit('left', 1)">Legg til venstre</button>
+                <button class="side-btn" onclick="modifyUnit('right', 1)">Legg til høyre</button>
+                <button class="side-btn" onclick="modifyUnit('left', -1)">Fjern fra venstre</button>
+                <button class="side-btn" onclick="modifyUnit('right', -1)">Fjern fra høyre</button>
+            </div>
+
+            <div class="action-group" id="divGroup" style="display:none;">
+                <span>X-bokser: </span>
+                <button class="side-btn" onclick="divideAll()">Del begge sider på antall X</button>
+            </div>
+            
+            <p style="font-size: 0.9em; color: #7f8c8d;">Tips: Prøv å fjerne ting slik at X blir alene.</p>
+        </div>
+    </div>
+
+    <div class="success-overlay" id="successScreen">
+        <h2>RIKTIG!</h2>
+        <p id="solutionText"></p>
+        <button class="next-btn" onclick="nextLevel()">Neste oppgave</button>
+    </div>
+
+    <script>
+        // Spill-tilstand
+        let level = 1;
+        let leftX = 0;
+        let leftUnit = 0;
+        let rightX = 0;
+        let rightUnit = 0;
+        let xValue = 0; // Det hemmelige svaret
+
+        // Nivå-konfigurasjon
+        function setupLevel() {
+            document.getElementById('successScreen').style.display = 'none';
+            document.getElementById('messageBox').innerText = "";
+            document.getElementById('divGroup').style.display = 'none';
+            resetBeam();
+
+            // Generer oppgaver basert på nivå
+            if (level === 1) {
+                // x + b = c
+                xValue = Math.floor(Math.random() * 4) + 2; // X er 2 til 5
+                leftX = 1;
+                let add = Math.floor(Math.random() * 3) + 1;
+                leftUnit = add;
+                rightX = 0;
+                rightUnit = xValue + add;
+            } else if (level === 2) {
+                // x + b = c (Større tall)
+                xValue = Math.floor(Math.random() * 5) + 3;
+                leftX = 1;
+                leftUnit = Math.floor(Math.random() * 5) + 3;
+                rightX = 0;
+                rightUnit = xValue + leftUnit;
+            } else if (level === 3) {
+                // 2x = c (Introduksjon til deling)
+                xValue = Math.floor(Math.random() * 3) + 2;
+                leftX = 2;
+                leftUnit = 0;
+                rightX = 0;
+                rightUnit = xValue * 2;
+            } else {
+                // 2x + b = c (Kombinasjon)
+                xValue = Math.floor(Math.random() * 3) + 2;
+                leftX = 2;
+                leftUnit = Math.floor(Math.random() * 4) + 2;
+                rightX = 0;
+                rightUnit = (xValue * 2) + leftUnit;
+            }
+
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const leftPan = document.getElementById('leftPan');
+            const rightPan = document.getElementById('rightPan');
+            leftPan.innerHTML = '';
+            rightPan.innerHTML = '';
+
+            // Tegn X-bokser
+            for(let i=0; i<leftX; i++) leftPan.innerHTML += '<div class="box-x">x</div>';
+            for(let i=0; i<rightX; i++) rightPan.innerHTML += '<div class="box-x">x</div>';
+
+            // Tegn 1-ere
+            for(let i=0; i<leftUnit; i++) leftPan.innerHTML += '<div class="circle-1">1</div>';
+            for(let i=0; i<rightUnit; i++) rightPan.innerHTML += '<div class="circle-1">1</div>';
+
+            // Oppdater ligningstekst
+            let lText = (leftX > 0 ? leftX + "x" : "") + (leftUnit > 0 ? (leftX>0?" + ":"") + leftUnit : "");
+            if (lText === "") lText = "0";
+            if (leftX === 1 && leftUnit === 0) lText = "x"; // Bare vis x, ikke 1x
+            if (leftX === 1 && leftUnit > 0) lText = "x + " + leftUnit;
+
+            let rText = rightUnit.toString();
+            
+            document.getElementById('equationDisplay').innerText = `${lText} = ${rText}`;
+
+            // Sjekk balanse
+            checkBalance();
+
+            // Vis dele-knapp hvis vi bare har X-er igjen på venstre og mer enn 1 X
+            if (leftUnit === 0 && leftX > 1 && rightX === 0) {
+                document.getElementById('divGroup').style.display = 'flex';
+            } else {
+                document.getElementById('divGroup').style.display = 'none';
+            }
+        }
+
+        function checkBalance() {
+            const leftTotal = (leftX * xValue) + leftUnit;
+            const rightTotal = (rightX * xValue) + rightUnit;
+            const beam = document.getElementById('beam');
+            const msg = document.getElementById('messageBox');
+
+            if (leftTotal === rightTotal) {
+                beam.style.transform = "rotate(0deg)";
+                msg.innerText = "";
+                
+                // Sjekk om ferdig (x = svar)
+                if (leftX === 1 && leftUnit === 0 && rightX === 0) {
+                    setTimeout(() => {
+                        document.getElementById('solutionText').innerText = "x er lik " + rightUnit;
+                        document.getElementById('successScreen').style.display = 'flex';
+                    }, 500);
+                }
+
+            } else if (leftTotal > rightTotal) {
+                beam.style.transform = "rotate(-10deg)"; // Tipper mot venstre
+                msg.innerText = "Ubalanse! Venstre side er tyngre.";
+            } else {
+                beam.style.transform = "rotate(10deg)"; // Tipper mot høyre
+                msg.innerText = "Ubalanse! Høyre side er tyngre.";
+            }
+        }
+
+        function resetBeam() {
+            document.getElementById('beam').style.transform = "rotate(0deg)";
+        }
+
+        // Spiller-handlinger
+        function modifyUnit(side, amount) {
+            if (side === 'left') {
+                if (amount < 0 && leftUnit <= 0) return; // Kan ikke fjerne hvis tomt
+                leftUnit += amount;
+            } else {
+                if (amount < 0 && rightUnit <= 0) return;
+                rightUnit += amount;
+            }
+            updateDisplay();
+        }
+
+        function divideAll() {
+            // Dette er en "magisk" knapp for nivå 3/4 som deler alt på antall X
+            // For å lære konseptet: "Jeg har 2x = 6, derfor må hver x være verdt 3"
+            if (leftX > 0 && rightUnit % leftX === 0) {
+                let divisor = leftX;
+                leftX = leftX / divisor;
+                rightUnit = rightUnit / divisor;
+                updateDisplay();
+            }
+        }
+
+        function nextLevel() {
+            level++;
+            setupLevel();
+        }
+
+        // Start spillet
+        setupLevel();
+
+    </script>
+</body>
+</html>
